@@ -5,6 +5,7 @@ import (
 	"github.com/akazwz/weibo-hot-search/global"
 	"github.com/akazwz/weibo-hot-search/initialize"
 	"github.com/akazwz/weibo-hot-search/utils/influx"
+	"log"
 )
 
 func main() {
@@ -24,5 +25,9 @@ func main() {
 		fmt.Println(`System Serve Start Error`)
 	}*/
 
-	influx.GetDurationHotSearch()
+	hotSearches, err := influx.GetDurationHotSearch()
+	if err != nil {
+		log.Println("get duration hot searches error")
+	}
+	fmt.Println(hotSearches[3])
 }
