@@ -119,3 +119,36 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 	}
 	return hotSearch, nil
 }
+
+func GetDurationHotSearch() {
+	client := influxdb2.NewClient(global.CFG.URL, global.CFG.Token)
+	defer client.Close()
+	stop := time.Now().Format(time.RFC3339)
+	start := time.Now().Add(-90 * time.Minute).Format(time.RFC3339)
+	query := `import "influxdata/influxdb/schema"
+    from(bucket: "weibo")
+    |> range(start: ` + start + `, stop: ` + stop + `)
+    |> schema.fieldsAsCols()
+    |> timeShift(duration: 8h, columns: ["_start", "_stop", "_time"])`
+	queryAPI := client.QueryAPI(global.CFG.Org)
+	result, err := queryAPI.Query(context.Background(), query)
+
+	if err == nil {
+		// Iterate over query response
+		for result.Next() {
+			// Notice when group key has changed
+			if result.TableChanged() {
+				fmt.Printf("table: %s\n", result.TableMetadata().String())
+			}
+			values := result.Record().Values()
+			fmt.Println(values)
+		}
+		// check for an error
+		if result.Err() != nil {
+			fmt.Printf("query parsing error: %s\n", result.Err().Error())
+		}
+	} else {
+		panic(err)
+	}
+
+}

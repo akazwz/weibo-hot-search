@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/akazwz/weibo-hot-search/global"
 	"github.com/akazwz/weibo-hot-search/initialize"
-	"net/http"
+	"github.com/akazwz/weibo-hot-search/utils/influx"
 )
 
 func main() {
@@ -13,7 +13,7 @@ func main() {
 		fmt.Println("配置文件初始化失败")
 	}
 
-	routers := initialize.Routers()
+	/*routers := initialize.Routers()
 
 	s := &http.Server{
 		Addr:    ":8000",
@@ -22,5 +22,7 @@ func main() {
 
 	if err := s.ListenAndServe(); err != nil {
 		fmt.Println(`System Serve Start Error`)
-	}
+	}*/
+
+	influx.GetDurationHotSearch()
 }
