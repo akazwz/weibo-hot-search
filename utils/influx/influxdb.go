@@ -6,26 +6,10 @@ import (
 	"github.com/akazwz/weibo-hot-search/global"
 	"github.com/akazwz/weibo-hot-search/model"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
-	"github.com/influxdata/influxdb-client-go/v2/api/http"
 	"log"
 	"strconv"
 	"time"
 )
-
-func Write(measurement string, tags map[string]string, fields map[string]interface{}) (err error) {
-	client := influxdb2.NewClient(global.CFG.URL, global.CFG.Token)
-	// always close client at the end
-	defer client.Close()
-	p := influxdb2.NewPoint(measurement, tags, fields, time.Now())
-	writeApi := client.WriteAPI(global.CFG.Org, global.CFG.Bucket)
-	writeApi.WritePoint(p)
-	writeApi.Flush()
-	writeApi.SetWriteFailedCallback(func(batch string, error http.Error, retryAttempts uint) bool {
-		err = &error
-		return false
-	})
-	return
-}
 
 func GetCurrentHotSearch() (model.HotSearch, error) {
 	client := influxdb2.NewClient(global.CFG.URL, global.CFG.Token)
@@ -197,20 +181,24 @@ func GetDurationHotSearch(start, stop string) ([]model.HotSearch, error) {
 	return hotSearches, nil
 }
 
-func GetHotSearchesByContent(content, start, stop string) ([]model.SingleHotSearch, error) {
+func GetHotSearchesByContent(content, start, stop string) ([]model.HotSearch, error) {
 	client := influxdb2.NewClient(global.CFG.URL, global.CFG.Token)
 	defer client.Close()
-	stop = time.Now().Format(time.RFC3339)
-	start = time.Now().Add(-90 * time.Minute).Format(time.RFC3339)
+	if start == "" || stop == "" {
+		stop = time.Now().Format(time.RFC3339)
+		start = time.Now().Add(-6 * time.Hour).Format(time.RFC3339)
+	}
 	query := `import "influxdata/influxdb/schema"
     from(bucket: "weibo")
     |> range(start: ` + start + `, stop: ` + stop + `)
     |> schema.fieldsAsCols()
+    |> group(columns: ["time"], mode:"by")
+    |> sort(columns: ["_time"])
     |> timeShift(duration: 8h, columns: ["_start", "_stop", "_time"])
     |> filter(fn: (r) => r["content"] == "` + content + `")`
 	queryAPI := client.QueryAPI(global.CFG.Org)
 	result, err := queryAPI.Query(context.Background(), query)
-	var singleHotSearches []model.SingleHotSearch
+	var hotSearches []model.HotSearch
 	if err == nil {
 		for result.Next() {
 			if result.TableChanged() {
@@ -218,6 +206,9 @@ func GetHotSearchesByContent(content, start, stop string) ([]model.SingleHotSear
 			}
 			values := result.Record().Values()
 
+			timeInterface := values["_time"]
+			timeStr := fmt.Sprintf("%v", timeInterface)
+			timeStr = timeStr[:19]
 			rank := values["rank"]
 			contentInterface := values["content"]
 			hot := values["hot"]
@@ -233,14 +224,14 @@ func GetHotSearchesByContent(content, start, stop string) ([]model.SingleHotSear
 			rankInt, err := strconv.Atoi(rankStr)
 			if err != nil {
 				log.Println("rank conv error")
-				return singleHotSearches, err
+				return hotSearches, err
 			}
 
 			hotInt, err := strconv.Atoi(hotStr)
 
 			if err != nil {
 				log.Println("hot conv error")
-				return singleHotSearches, err
+				return hotSearches, err
 			}
 			singleHotSearch := model.SingleHotSearch{}
 			singleHotSearch.Rank = rankInt
@@ -248,15 +239,21 @@ func GetHotSearchesByContent(content, start, stop string) ([]model.SingleHotSear
 			singleHotSearch.Hot = hotInt
 			singleHotSearch.Link = linkStr
 			singleHotSearch.TopicLead = topicLeadStr
-			singleHotSearches = append(singleHotSearches, singleHotSearch)
+
+			hotSearches = append(hotSearches, model.HotSearch{
+				Time:      timeStr,
+				ImageFile: "",
+				PdfFile:   "",
+				Searches:  []model.SingleHotSearch{singleHotSearch},
+			})
 		}
 		if result.Err() != nil {
 			fmt.Printf("query parsing error: %s\n", result.Err().Error())
-			return singleHotSearches, result.Err()
+			return hotSearches, result.Err()
 		}
 	} else {
 		panic(err)
-		return singleHotSearches, err
+		return hotSearches, err
 	}
-	return singleHotSearches, nil
+	return hotSearches, nil
 }
