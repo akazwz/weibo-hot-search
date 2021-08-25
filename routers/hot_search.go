@@ -6,8 +6,9 @@ import (
 )
 
 func InitHotSearch(r *gin.RouterGroup) {
-	hotSearchRouter := r.Group("hot-search")
+	hotSearchRouter := r.Group("hot-searches")
 	{
-		hotSearchRouter.GET("", api.GetCurrentHotSearchApi)
+		hotSearchRouter.GET("/current", api.GetCurrentHotSearchApi)
+		hotSearchRouter.GET("", api.GetDurationHotSearchApi)
 	}
 }

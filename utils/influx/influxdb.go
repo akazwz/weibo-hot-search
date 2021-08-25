@@ -65,17 +65,6 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 					timeStr = timeStr[:19]
 					img := fmt.Sprintf("%v", imageFile)
 					pdf := fmt.Sprintf("%v", pdfFile)
-					//timeTime, err := time.Parse(time., timeStr)
-					/*location, err := time.LoadLocation("Asia/Shanghai")
-					if err != nil {
-						log.Println("time location load error")
-						return hotSearch, err
-					}
-					timeTime, err := time.ParseInLocation("2006-01-02 15:04:05", timeStr, location)
-					if err != nil {
-						log.Println("time parse error")
-						return hotSearch, err
-					}*/
 					hotSearch.Time = timeStr
 					hotSearch.ImageFile = img
 					hotSearch.PdfFile = pdf
@@ -120,11 +109,9 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 	return hotSearch, nil
 }
 
-func GetDurationHotSearch() ([]model.HotSearch, error) {
+func GetDurationHotSearch(start, stop string) ([]model.HotSearch, error) {
 	client := influxdb2.NewClient(global.CFG.URL, global.CFG.Token)
 	defer client.Close()
-	stop := time.Now().Format(time.RFC3339)
-	start := time.Now().Add(-50 * time.Minute).Format(time.RFC3339)
 	query := `import "influxdata/influxdb/schema"
     from(bucket: "weibo")
     |> range(start: ` + start + `, stop: ` + stop + `)
@@ -138,9 +125,7 @@ func GetDurationHotSearch() ([]model.HotSearch, error) {
 	searches := make([]model.SingleHotSearch, 0)
 	hotSearch := model.HotSearch{}
 	if err == nil {
-		// Iterate over query response
 		for result.Next() {
-			// Notice when group key has changed
 			if result.TableChanged() {
 				fmt.Printf("table: %s\n", result.TableMetadata().String())
 			}
@@ -203,7 +188,6 @@ func GetDurationHotSearch() ([]model.HotSearch, error) {
 			hotSearch.Searches = searches
 			hotSearches[tableInt] = hotSearch
 		}
-		// check for an error
 		if result.Err() != nil {
 			fmt.Printf("query parsing error: %s\n", result.Err().Error())
 		}
