@@ -196,3 +196,67 @@ func GetDurationHotSearch(start, stop string) ([]model.HotSearch, error) {
 	}
 	return hotSearches, nil
 }
+
+func GetHotSearchesByContent(content, start, stop string) ([]model.SingleHotSearch, error) {
+	client := influxdb2.NewClient(global.CFG.URL, global.CFG.Token)
+	defer client.Close()
+	stop = time.Now().Format(time.RFC3339)
+	start = time.Now().Add(-90 * time.Minute).Format(time.RFC3339)
+	query := `import "influxdata/influxdb/schema"
+    from(bucket: "weibo")
+    |> range(start: ` + start + `, stop: ` + stop + `)
+    |> schema.fieldsAsCols()
+    |> timeShift(duration: 8h, columns: ["_start", "_stop", "_time"])
+    |> filter(fn: (r) => r["content"] == "` + content + `")`
+	queryAPI := client.QueryAPI(global.CFG.Org)
+	result, err := queryAPI.Query(context.Background(), query)
+	var singleHotSearches []model.SingleHotSearch
+	if err == nil {
+		for result.Next() {
+			if result.TableChanged() {
+				fmt.Printf("table: %s\n", result.TableMetadata().String())
+			}
+			values := result.Record().Values()
+
+			rank := values["rank"]
+			contentInterface := values["content"]
+			hot := values["hot"]
+			link := values["link"]
+			topicLead := values["topic_lead"]
+
+			rankStr := fmt.Sprintf("%v", rank)
+			contentStr := fmt.Sprintf("%v", contentInterface)
+			hotStr := fmt.Sprintf("%v", hot)
+			linkStr := fmt.Sprintf("%v", link)
+			topicLeadStr := fmt.Sprintf("%v", topicLead)
+
+			rankInt, err := strconv.Atoi(rankStr)
+			if err != nil {
+				log.Println("rank conv error")
+				return singleHotSearches, err
+			}
+
+			hotInt, err := strconv.Atoi(hotStr)
+
+			if err != nil {
+				log.Println("hot conv error")
+				return singleHotSearches, err
+			}
+			singleHotSearch := model.SingleHotSearch{}
+			singleHotSearch.Rank = rankInt
+			singleHotSearch.Content = contentStr
+			singleHotSearch.Hot = hotInt
+			singleHotSearch.Link = linkStr
+			singleHotSearch.TopicLead = topicLeadStr
+			singleHotSearches = append(singleHotSearches, singleHotSearch)
+		}
+		if result.Err() != nil {
+			fmt.Printf("query parsing error: %s\n", result.Err().Error())
+			return singleHotSearches, result.Err()
+		}
+	} else {
+		panic(err)
+		return singleHotSearches, err
+	}
+	return singleHotSearches, nil
+}
