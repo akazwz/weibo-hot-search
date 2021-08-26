@@ -1,16 +1,16 @@
 package model
 
 type HotSearch struct {
-	Time      string
-	ImageFile string
-	PdfFile   string
-	Searches  []SingleHotSearch
+	Time      string            `json:"time"`
+	ImageFile string            `json:"image_file"`
+	PdfFile   string            `json:"pdf_file"`
+	Searches  []SingleHotSearch `json:"searches"`
 }
 
 type SingleHotSearch struct {
-	Rank      int
-	Content   string
-	Hot       int
-	Link      string
-	TopicLead string
+	Rank      int    `json:"rank"`
+	Content   string `json:"content"`
+	Hot       int    `json:"hot"`
+	Link      string `json:"link"`
+	TopicLead string `json:"topic_lead"`
 }
