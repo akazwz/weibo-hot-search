@@ -195,7 +195,8 @@ func GetHotSearchesByContent(content, start, stop string) ([]model.HotSearch, er
     |> group(columns: ["time"], mode:"by")
     |> sort(columns: ["_time"])
     |> timeShift(duration: 8h, columns: ["_start", "_stop", "_time"])
-    |> filter(fn: (r) => r["content"] == "` + content + `")`
+    |> filter(fn: (r) => r.content == "` + content + `")`
+	log.Println(query)
 	queryAPI := client.QueryAPI(global.CFG.Org)
 	result, err := queryAPI.Query(context.Background(), query)
 	var hotSearches []model.HotSearch
