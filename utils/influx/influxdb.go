@@ -58,6 +58,9 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 					hotStr := fmt.Sprintf("%v", hot)
 					linkStr := fmt.Sprintf("%v", link)
 					topicLeadStr := fmt.Sprintf("%v", topicLead)
+					if topicLead == nil {
+						topicLeadStr = ""
+					}
 
 					rankInt, err := strconv.Atoi(rankStr)
 					if err != nil {
@@ -147,6 +150,9 @@ func GetDurationHotSearch(start, stop string) ([]model.HotSearch, error) {
 				hotStr := fmt.Sprintf("%v", hot)
 				linkStr := fmt.Sprintf("%v", link)
 				topicLeadStr := fmt.Sprintf("%v", topicLead)
+				if topicLead == nil {
+					topicLeadStr = ""
+				}
 
 				rankInt, err := strconv.Atoi(rankStr)
 				if err != nil {
@@ -221,6 +227,9 @@ func GetHotSearchesByContent(content, start, stop string) ([]model.HotSearch, er
 			hotStr := fmt.Sprintf("%v", hot)
 			linkStr := fmt.Sprintf("%v", link)
 			topicLeadStr := fmt.Sprintf("%v", topicLead)
+			if topicLead == nil {
+				topicLeadStr = ""
+			}
 
 			rankInt, err := strconv.Atoi(rankStr)
 			if err != nil {
