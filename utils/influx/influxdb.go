@@ -112,6 +112,7 @@ func GetDurationHotSearch(start, stop string) ([]model.HotSearch, error) {
 	searches := make([]model.SingleHotSearch, 0)
 	hotSearch := model.HotSearch{}
 	if err == nil {
+		tableChanged := 0
 		for result.Next() {
 			if result.TableChanged() {
 				fmt.Printf("table: %s\n", result.TableMetadata().String())
@@ -124,6 +125,10 @@ func GetDurationHotSearch(start, stop string) ([]model.HotSearch, error) {
 			if err != nil {
 				log.Println("table conv error")
 				return hotSearches, err
+			}
+			if tableInt != tableChanged {
+				searches = make([]model.SingleHotSearch, 0)
+				tableChanged = tableInt
 			}
 
 			rank := values["rank"]
