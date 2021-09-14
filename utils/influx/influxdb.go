@@ -8,6 +8,7 @@ import (
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -21,6 +22,7 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
     |> range(start: ` + start + `, stop: ` + stop + `)
     |> schema.fieldsAsCols()
     |> timeShift(duration: 8h, columns: ["_start", "_stop", "_time"])`
+	log.Println(query)
 	queryAPI := client.QueryAPI(global.CFG.Org)
 	result, err := queryAPI.Query(context.Background(), query)
 
@@ -30,7 +32,7 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 	if err == nil {
 		for result.Next() {
 			if result.TableChanged() {
-				fmt.Printf("table: %s\n", result.TableMetadata().String())
+				//fmt.Printf("table: %s\n", result.TableMetadata().String())
 			}
 			if result.Record().Measurement() == "hot_search" {
 				values := result.Record().Values()
@@ -38,6 +40,7 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 				rank := values["rank"]
 				content := values["content"]
 				hot := values["hot"]
+				log.Println(hot)
 				link := values["link"]
 				topicLead := values["topic_lead"]
 
@@ -56,6 +59,10 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 					rankStr := fmt.Sprintf("%v", rank)
 					contentStr := fmt.Sprintf("%v", content)
 					hotStr := fmt.Sprintf("%v", hot)
+					hotArr := strings.Split(hotStr, " ")
+					if len(hotArr) > 1 {
+						hotStr = hotArr[1]
+					}
 					linkStr := fmt.Sprintf("%v", link)
 					topicLeadStr := fmt.Sprintf("%v", topicLead)
 					if topicLead == nil {
