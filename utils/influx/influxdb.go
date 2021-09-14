@@ -22,7 +22,6 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
     |> range(start: ` + start + `, stop: ` + stop + `)
     |> schema.fieldsAsCols()
     |> timeShift(duration: 8h, columns: ["_start", "_stop", "_time"])`
-	log.Println(query)
 	queryAPI := client.QueryAPI(global.CFG.Org)
 	result, err := queryAPI.Query(context.Background(), query)
 
@@ -40,7 +39,6 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 				rank := values["rank"]
 				content := values["content"]
 				hot := values["hot"]
-				log.Println(hot)
 				link := values["link"]
 				topicLead := values["topic_lead"]
 
