@@ -1,6 +1,6 @@
 module github.com/akazwz/weibo-hot-search
 
-go 1.17
+go 1.16
 
 require (
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
