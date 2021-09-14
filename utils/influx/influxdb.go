@@ -123,7 +123,7 @@ func GetDurationHotSearch(start, stop string) ([]model.HotSearch, error) {
 		tableChanged := 0
 		for result.Next() {
 			if result.TableChanged() {
-				fmt.Printf("table: %s\n", result.TableMetadata().String())
+				//fmt.Printf("table: %s\n", result.TableMetadata().String())
 			}
 			values := result.Record().Values()
 			table := values["table"]
@@ -144,6 +144,7 @@ func GetDurationHotSearch(start, stop string) ([]model.HotSearch, error) {
 			hot := values["hot"]
 			link := values["link"]
 			topicLead := values["topic_lead"]
+			tagStr := ""
 
 			if rank == "00" {
 				hotSearches = append(hotSearches, model.HotSearch{})
@@ -161,6 +162,11 @@ func GetDurationHotSearch(start, stop string) ([]model.HotSearch, error) {
 				rankStr := fmt.Sprintf("%v", rank)
 				contentStr := fmt.Sprintf("%v", content)
 				hotStr := fmt.Sprintf("%v", hot)
+				hotArr := strings.Split(hotStr, " ")
+				if len(hotArr) > 1 {
+					hotStr = hotArr[1]
+					tagStr = hotArr[0]
+				}
 				linkStr := fmt.Sprintf("%v", link)
 				topicLeadStr := fmt.Sprintf("%v", topicLead)
 				if topicLead == nil {
@@ -184,6 +190,7 @@ func GetDurationHotSearch(start, stop string) ([]model.HotSearch, error) {
 				singleHotSearch.Rank = rankInt
 				singleHotSearch.Content = contentStr
 				singleHotSearch.Hot = hotInt
+				singleHotSearch.Tag = tagStr
 				singleHotSearch.Link = linkStr
 				singleHotSearch.TopicLead = topicLeadStr
 				searches = append(searches, singleHotSearch)
@@ -231,12 +238,18 @@ func GetHotSearchesByContent(content, start, stop string) ([]model.HotSearch, er
 			rank := values["rank"]
 			contentInterface := values["content"]
 			hot := values["hot"]
+			tagStr := ""
 			link := values["link"]
 			topicLead := values["topic_lead"]
 
 			rankStr := fmt.Sprintf("%v", rank)
 			contentStr := fmt.Sprintf("%v", contentInterface)
 			hotStr := fmt.Sprintf("%v", hot)
+			hotArr := strings.Split(hotStr, " ")
+			if len(hotArr) > 1 {
+				hotStr = hotArr[1]
+				tagStr = hotArr[0]
+			}
 			linkStr := fmt.Sprintf("%v", link)
 			topicLeadStr := fmt.Sprintf("%v", topicLead)
 			if topicLead == nil {
@@ -259,6 +272,7 @@ func GetHotSearchesByContent(content, start, stop string) ([]model.HotSearch, er
 			singleHotSearch.Rank = rankInt
 			singleHotSearch.Content = contentStr
 			singleHotSearch.Hot = hotInt
+			singleHotSearch.Tag = tagStr
 			singleHotSearch.Link = linkStr
 			singleHotSearch.TopicLead = topicLeadStr
 
