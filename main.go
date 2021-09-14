@@ -16,7 +16,7 @@ func main() {
 	routers := initialize.Routers()
 
 	s := &http.Server{
-		Addr:    ":8000",
+		Addr:    ":3337",
 		Handler: routers,
 	}
 
