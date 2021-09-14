@@ -10,6 +10,7 @@ type HotSearch struct {
 type SingleHotSearch struct {
 	Rank      int    `json:"rank"`
 	Content   string `json:"content"`
+	Tag       string `json:"tag"`
 	Hot       int    `json:"hot"`
 	Link      string `json:"link"`
 	TopicLead string `json:"topic_lead"`

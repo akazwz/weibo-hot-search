@@ -41,6 +41,7 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 				hot := values["hot"]
 				link := values["link"]
 				topicLead := values["topic_lead"]
+				tagStr := ""
 
 				if rank == "00" {
 					imageFile := values["image_file"]
@@ -60,6 +61,7 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 					hotArr := strings.Split(hotStr, " ")
 					if len(hotArr) > 1 {
 						hotStr = hotArr[1]
+						tagStr = hotArr[0]
 					}
 					linkStr := fmt.Sprintf("%v", link)
 					topicLeadStr := fmt.Sprintf("%v", topicLead)
@@ -84,6 +86,7 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 					singleHotSearch.Rank = rankInt
 					singleHotSearch.Content = contentStr
 					singleHotSearch.Hot = hotInt
+					singleHotSearch.Tag = tagStr
 					singleHotSearch.Link = linkStr
 					singleHotSearch.TopicLead = topicLeadStr
 					searches = append(searches, singleHotSearch)
