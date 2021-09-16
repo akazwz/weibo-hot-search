@@ -116,27 +116,29 @@ func GetDurationHotSearch(start, stop string) ([]model.HotSearch, error) {
 	queryAPI := client.QueryAPI(global.CFG.Org)
 	result, err := queryAPI.Query(context.Background(), query)
 
-	hotSearches := make([]model.HotSearch, 500000)
+	hotSearches := make([]model.HotSearch, 0)
 	searches := make([]model.SingleHotSearch, 0)
 	hotSearch := model.HotSearch{}
 	if err == nil {
-		tableChanged := 0
+		tableIndex := 0
+		index := 0
 		for result.Next() {
-			fmt.Println(cap(hotSearches))
-			if result.TableChanged() {
-			}
+			index++
+			// 获取包含热搜数据的map
 			values := result.Record().Values()
-			table := values["table"]
-			tableStr := fmt.Sprintf("%v", table)
+			fmt.Println("values:", values)
 
+			table := values["table"] // table,table相同时为同一条热搜
+			tableStr := fmt.Sprintf("%v", table)
 			tableInt, err := strconv.Atoi(tableStr)
 			if err != nil {
 				log.Println("table conv error")
 				return hotSearches, err
 			}
-			if tableInt != tableChanged {
+			if tableInt != tableIndex {
+				// 热搜切换时,重置searches
 				searches = make([]model.SingleHotSearch, 0)
-				tableChanged = tableInt
+				tableIndex = tableInt
 			}
 			rank := values["rank"]
 			content := values["content"]
@@ -195,8 +197,9 @@ func GetDurationHotSearch(start, stop string) ([]model.HotSearch, error) {
 				searches = append(searches, singleHotSearch)
 			}
 			hotSearch.Searches = searches
-			hotSearches[tableInt] = hotSearch
+			//hotSearches[tableIndex] = hotSearch
 		}
+		fmt.Println(index)
 		if result.Err() != nil {
 			fmt.Printf("query parsing error: %s\n", result.Err().Error())
 		}
