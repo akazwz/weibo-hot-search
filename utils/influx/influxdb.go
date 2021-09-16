@@ -116,14 +116,14 @@ func GetDurationHotSearch(start, stop string) ([]model.HotSearch, error) {
 	queryAPI := client.QueryAPI(global.CFG.Org)
 	result, err := queryAPI.Query(context.Background(), query)
 
-	var hotSearches []model.HotSearch
+	hotSearches := make([]model.HotSearch, 500000)
 	searches := make([]model.SingleHotSearch, 0)
 	hotSearch := model.HotSearch{}
 	if err == nil {
 		tableChanged := 0
 		for result.Next() {
+			fmt.Println(cap(hotSearches))
 			if result.TableChanged() {
-				//fmt.Printf("table: %s\n", result.TableMetadata().String())
 			}
 			values := result.Record().Values()
 			table := values["table"]
@@ -138,7 +138,6 @@ func GetDurationHotSearch(start, stop string) ([]model.HotSearch, error) {
 				searches = make([]model.SingleHotSearch, 0)
 				tableChanged = tableInt
 			}
-
 			rank := values["rank"]
 			content := values["content"]
 			hot := values["hot"]
