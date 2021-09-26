@@ -34,10 +34,21 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 	hotSearch := model.HotSearch{}
 	searches := make([]model.SingleHotSearch, 0)
 	if err == nil {
+		tableIndex := 0
 		for result.Next() {
 			if result.Record().Measurement() == "new-hot" {
 				values := result.Record().Values()
-				fmt.Println(values)
+				table := values["table"] // table,table相同时为同一条热搜
+				tableStr := fmt.Sprintf("%v", table)
+				tableInt, err := strconv.Atoi(tableStr)
+				if err != nil {
+					log.Println("table conv error")
+				}
+				if tableInt != tableIndex {
+					// 有一次以上热搜时,重置searches
+					searches = make([]model.SingleHotSearch, 0)
+					tableIndex = tableInt
+				}
 				timeStr := fmt.Sprintf("%v", values["_time"])
 				timeStr = timeStr[:19]
 				rankStr := fmt.Sprintf("%v", values["rank"])
