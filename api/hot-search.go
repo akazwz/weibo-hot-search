@@ -5,9 +5,9 @@ import (
 	"github.com/akazwz/weibo-hot-search/utils/influx"
 	"github.com/gin-gonic/gin"
 	"log"
-	"time"
 )
 
+// GetCurrentHotSearchApi 获取当前热搜
 func GetCurrentHotSearchApi(c *gin.Context) {
 	hotSearch, err := influx.GetCurrentHotSearch()
 	if err != nil {
@@ -18,7 +18,7 @@ func GetCurrentHotSearchApi(c *gin.Context) {
 	response.CommonSuccess(2000, "success", hotSearch, c)
 }
 
-func GetDurationHotSearchApi(c *gin.Context) {
+/*func GetDurationHotSearchApi(c *gin.Context) {
 	start := c.Query("start")
 	stop := c.Query("stop")
 	if start == "" || stop == "" {
@@ -89,4 +89,4 @@ func GetHotSearchesByContentApi(c *gin.Context) {
 		return
 	}
 	response.CommonSuccess(2000, "success", searches, c)
-}
+}*/

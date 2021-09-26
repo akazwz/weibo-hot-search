@@ -1,17 +1,17 @@
 package model
 
+import "time"
+
 type HotSearch struct {
-	Time      string            `json:"time"`
-	ImageFile string            `json:"image_file"`
-	PdfFile   string            `json:"pdf_file"`
-	Searches  []SingleHotSearch `json:"searches"`
+	Time     time.Time         `json:"time"`
+	Searches []SingleHotSearch `json:"searches"`
 }
 
 type SingleHotSearch struct {
-	Rank      int    `json:"rank"`
-	Content   string `json:"content"`
-	Tag       string `json:"tag"`
-	Hot       int    `json:"hot"`
-	Link      string `json:"link"`
-	TopicLead string `json:"topic_lead"`
+	Rank    int    `json:"rank"`
+	Content string `json:"content"`
+	Link    string `json:"link"`
+	Hot     int    `json:"hot"`
+	Tag     string `json:"tag"`
+	Icon    string `json:"icon"`
 }
