@@ -3,11 +3,13 @@ package influx
 import (
 	"context"
 	"fmt"
+	"log"
+	"strconv"
+	"time"
+
 	"github.com/akazwz/weibo-hot-search/global"
 	"github.com/akazwz/weibo-hot-search/model"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
-	"log"
-	"time"
 )
 
 // GetCurrentHotSearch 获取当前热搜
@@ -15,7 +17,9 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 	client := influxdb2.NewClient(global.CFG.URL, global.CFG.Token)
 	defer client.Close()
 	stop := time.Now().Format(time.RFC3339)
-	start := time.Now().Add(-1 * time.Minute).Format(time.RFC3339)
+	// 获取两分钟之内的热搜，整分情况下有一条，其他情况为两条，最新的一条覆盖掉前一条
+	start := time.Now().Add(-2 * time.Minute).Format(time.RFC3339)
+
 	query := `import "influxdata/influxdb/schema"
     from(bucket: "weibo")
     |> range(start: ` + start + `, stop: ` + stop + `)
@@ -29,27 +33,49 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 
 	hotSearch := model.HotSearch{}
 	searches := make([]model.SingleHotSearch, 0)
-
 	if err == nil {
-		location, err := time.LoadLocation("Asia/Shanghai")
-		if err != nil {
-			log.Fatal("时区加载失败")
-		}
 		for result.Next() {
-			if result.TableChanged() {
-				//fmt.Printf("table: %s\n", result.TableMetadata().String())
-			}
 			if result.Record().Measurement() == "new-hot" {
 				values := result.Record().Values()
-				//fmt.Println(values)
+				fmt.Println(values)
 				timeStr := fmt.Sprintf("%v", values["_time"])
 				timeStr = timeStr[:19]
-				timeInLocation, err := time.ParseInLocation("2006-01-02 15:04:05", timeStr, location)
-				formatTime := timeInLocation.Format("2006-01-02-15-04-05")
-				if err != nil {
-					log.Println("时间转换失败")
+				rankStr := fmt.Sprintf("%v", values["rank"])
+				// 日期在热搜第一条获取即可
+				if rankStr == "01" {
+					hotSearch.Time = timeStr
 				}
-				fmt.Println(formatTime)
+				rankInt, err := strconv.Atoi(rankStr)
+				if err != nil {
+					log.Println("rank conv error")
+				}
+				contentStr := fmt.Sprintf("%v", values["content"])
+				LinkStr := fmt.Sprintf("%v", values["link"])
+				hotStr := fmt.Sprintf("%v", values["hot"])
+				hotInt, err := strconv.Atoi(hotStr)
+				if err != nil {
+					log.Println("hot conv error")
+				}
+
+				// 为空 置零
+				tagStr := fmt.Sprintf("%v", values["tag"])
+				if values["tag"] == nil {
+					tagStr = ""
+				}
+				iconStr := fmt.Sprintf("%v", values["icon"])
+				if values["icon"] == nil {
+					iconStr = ""
+				}
+
+				singleHotSearch := model.SingleHotSearch{
+					Rank:    rankInt,
+					Content: contentStr,
+					Link:    LinkStr,
+					Hot:     hotInt,
+					Tag:     tagStr,
+					Icon:    iconStr,
+				}
+				searches = append(searches, singleHotSearch)
 			}
 		}
 		hotSearch.Searches = searches

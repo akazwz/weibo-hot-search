@@ -1,9 +1,7 @@
 package model
 
-import "time"
-
 type HotSearch struct {
-	Time     time.Time         `json:"time"`
+	Time     string            `json:"time"`
 	Searches []SingleHotSearch `json:"searches"`
 }
 
