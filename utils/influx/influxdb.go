@@ -6,6 +6,7 @@ import (
 	"github.com/akazwz/weibo-hot-search/global"
 	"github.com/akazwz/weibo-hot-search/model"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+	"log"
 	"time"
 )
 
@@ -30,6 +31,10 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 	searches := make([]model.SingleHotSearch, 0)
 
 	if err == nil {
+		location, err := time.LoadLocation("Asia/Shanghai")
+		if err != nil {
+			log.Fatal("时区加载失败")
+		}
 		for result.Next() {
 			if result.TableChanged() {
 				//fmt.Printf("table: %s\n", result.TableMetadata().String())
@@ -39,8 +44,12 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 				//fmt.Println(values)
 				timeStr := fmt.Sprintf("%v", values["_time"])
 				timeStr = timeStr[:19]
-
-				fmt.Println(timeStr)
+				timeInLocation, err := time.ParseInLocation("2006-01-02 15:04:05", timeStr, location)
+				formatTime := timeInLocation.Format("2006-01-02-15-04-05")
+				if err != nil {
+					log.Println("时间转换失败")
+				}
+				fmt.Println(formatTime)
 			}
 		}
 		hotSearch.Searches = searches
