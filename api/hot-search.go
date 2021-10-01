@@ -5,6 +5,7 @@ import (
 	"github.com/akazwz/weibo-hot-search/utils/influx"
 	"github.com/gin-gonic/gin"
 	"log"
+	"time"
 )
 
 // GetCurrentHotSearchApi 获取当前热搜
@@ -51,7 +52,7 @@ func GetCurrentHotSearchApi(c *gin.Context) {
 		response.CommonFailed(4000, "get current hot search error", c)
 	}
 	response.CommonSuccess(2000, "success", hotSearches, c)
-}
+}*/
 
 func GetHotSearchesByContentApi(c *gin.Context) {
 	start := c.Query("start")
@@ -89,4 +90,4 @@ func GetHotSearchesByContentApi(c *gin.Context) {
 		return
 	}
 	response.CommonSuccess(2000, "success", searches, c)
-}*/
+}

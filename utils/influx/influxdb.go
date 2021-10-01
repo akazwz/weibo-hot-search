@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/akazwz/weibo-hot-search/global"
@@ -205,12 +206,12 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 	return hotSearches, nil
 }*/
 
-/*func GetHotSearchesByContent(content, start, stop string) ([]model.HotSearch, error) {
+func GetHotSearchesByContent(content, start, stop string) ([]model.HotSearch, error) {
 	client := influxdb2.NewClient(global.CFG.URL, global.CFG.Token)
 	defer client.Close()
 	if start == "" || stop == "" {
 		stop = time.Now().Format(time.RFC3339)
-		start = time.Now().Add(-6 * time.Hour).Format(time.RFC3339)
+		start = time.Now().Add(-12 * time.Hour).Format(time.RFC3339)
 	}
 	query := `import "influxdata/influxdb/schema"
     from(bucket: "weibo")
@@ -238,7 +239,6 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 			hot := values["hot"]
 			tagStr := ""
 			link := values["link"]
-			topicLead := values["topic_lead"]
 
 			rankStr := fmt.Sprintf("%v", rank)
 			contentStr := fmt.Sprintf("%v", contentInterface)
@@ -249,10 +249,6 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 				tagStr = hotArr[0]
 			}
 			linkStr := fmt.Sprintf("%v", link)
-			topicLeadStr := fmt.Sprintf("%v", topicLead)
-			if topicLead == nil {
-				topicLeadStr = ""
-			}
 
 			rankInt, err := strconv.Atoi(rankStr)
 			if err != nil {
@@ -272,13 +268,10 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 			singleHotSearch.Hot = hotInt
 			singleHotSearch.Tag = tagStr
 			singleHotSearch.Link = linkStr
-			singleHotSearch.TopicLead = topicLeadStr
 
 			hotSearches = append(hotSearches, model.HotSearch{
-				Time:      timeStr,
-				ImageFile: "",
-				PdfFile:   "",
-				Searches:  []model.SingleHotSearch{singleHotSearch},
+				Time:     timeStr,
+				Searches: []model.SingleHotSearch{singleHotSearch},
 			})
 		}
 		if result.Err() != nil {
@@ -291,4 +284,3 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 	}
 	return hotSearches, nil
 }
-*/
