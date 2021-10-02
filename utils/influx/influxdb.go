@@ -230,6 +230,7 @@ func GetHotSearchesByContent(content, start, stop string) ([]model.HotSearch, er
 			if result.TableChanged() {
 			}
 			values := result.Record().Values()
+			log.Println(values)
 
 			timeInterface := values["_time"]
 			timeStr := fmt.Sprintf("%v", timeInterface)

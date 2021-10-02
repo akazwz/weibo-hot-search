@@ -10,6 +10,6 @@ func InitHotSearch(r *gin.RouterGroup) {
 	{
 		hotSearchRouter.GET("/current", api.GetCurrentHotSearchApi)
 		//hotSearchRouter.GET("", api.GetDurationHotSearchApi)
-		//hotSearchRouter.GET("/content/:content", api.GetHotSearchesByContentApi)
+		hotSearchRouter.GET("/content/:content", api.GetHotSearchesByContentApi)
 	}
 }
