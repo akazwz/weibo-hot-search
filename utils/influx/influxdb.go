@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/akazwz/weibo-hot-search/global"
@@ -211,7 +210,7 @@ func GetHotSearchesByContent(content, start, stop string) ([]model.HotSearch, er
 	defer client.Close()
 	if start == "" || stop == "" {
 		stop = time.Now().Format(time.RFC3339)
-		start = time.Now().Add(-12 * time.Hour).Format(time.RFC3339)
+		start = time.Now().Add(-24 * time.Hour).Format(time.RFC3339)
 	}
 	query := `import "influxdata/influxdb/schema"
     from(bucket: "weibo")
@@ -230,45 +229,39 @@ func GetHotSearchesByContent(content, start, stop string) ([]model.HotSearch, er
 			if result.TableChanged() {
 			}
 			values := result.Record().Values()
-			log.Println(values)
 
-			timeInterface := values["_time"]
-			timeStr := fmt.Sprintf("%v", timeInterface)
+			timeStr := fmt.Sprintf("%v", values["_time"])
 			timeStr = timeStr[:19]
-			rank := values["rank"]
-			contentInterface := values["content"]
-			hot := values["hot"]
-			tagStr := ""
-			link := values["link"]
-
-			rankStr := fmt.Sprintf("%v", rank)
-			contentStr := fmt.Sprintf("%v", contentInterface)
-			hotStr := fmt.Sprintf("%v", hot)
-			hotArr := strings.Split(hotStr, " ")
-			if len(hotArr) > 1 {
-				hotStr = hotArr[1]
-				tagStr = hotArr[0]
-			}
-			linkStr := fmt.Sprintf("%v", link)
-
+			rankStr := fmt.Sprintf("%v", values["rank"])
 			rankInt, err := strconv.Atoi(rankStr)
 			if err != nil {
 				log.Println("rank conv error")
-				return hotSearches, err
 			}
-
+			contentStr := fmt.Sprintf("%v", values["content"])
+			LinkStr := fmt.Sprintf("%v", values["link"])
+			hotStr := fmt.Sprintf("%v", values["hot"])
 			hotInt, err := strconv.Atoi(hotStr)
-
 			if err != nil {
 				log.Println("hot conv error")
-				return hotSearches, err
 			}
-			singleHotSearch := model.SingleHotSearch{}
-			singleHotSearch.Rank = rankInt
-			singleHotSearch.Content = contentStr
-			singleHotSearch.Hot = hotInt
-			singleHotSearch.Tag = tagStr
-			singleHotSearch.Link = linkStr
+
+			// 为空 置零
+			tagStr := fmt.Sprintf("%v", values["tag"])
+			if values["tag"] == nil {
+				tagStr = ""
+			}
+			iconStr := fmt.Sprintf("%v", values["icon"])
+			if values["icon"] == nil {
+				iconStr = ""
+			}
+			singleHotSearch := model.SingleHotSearch{
+				Rank:    rankInt,
+				Content: contentStr,
+				Link:    LinkStr,
+				Hot:     hotInt,
+				Tag:     tagStr,
+				Icon:    iconStr,
+			}
 
 			hotSearches = append(hotSearches, model.HotSearch{
 				Time:     timeStr,
