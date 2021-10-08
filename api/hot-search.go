@@ -19,11 +19,20 @@ func GetCurrentHotSearchApi(c *gin.Context) {
 	response.CommonSuccess(2000, "success", hotSearch, c)
 }
 
-/*func GetDurationHotSearchApi(c *gin.Context) {
+func GetDurationHotSearchApi(c *gin.Context) {
 	start := c.Query("start")
 	stop := c.Query("stop")
+	// 默认为一个小时
 	if start == "" || stop == "" {
-		GetCurrentHotSearchApi(c)
+		stop = time.Now().Format(time.RFC3339)
+		start = time.Now().Add(-1 * time.Hour).Format(time.RFC3339)
+		hotSearches, err := influx.GetDurationHotSearch(start, stop)
+		if err != nil {
+			log.Println("get current hot search error")
+			response.CommonFailed(4000, "get current hot search error", c)
+			return
+		}
+		response.CommonSuccess(2000, "success", hotSearches, c)
 		return
 	}
 	location, err := time.LoadLocation("Asia/Shanghai")
@@ -52,7 +61,7 @@ func GetCurrentHotSearchApi(c *gin.Context) {
 		response.CommonFailed(4000, "get current hot search error", c)
 	}
 	response.CommonSuccess(2000, "success", hotSearches, c)
-}*/
+}
 
 func GetHotSearchesByContentApi(c *gin.Context) {
 	start := c.Query("start")

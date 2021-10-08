@@ -100,7 +100,7 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 	return hotSearch, nil
 }
 
-/*func GetDurationHotSearch(start, stop string) ([]model.HotSearch, error) {
+func GetDurationHotSearch(start, stop string) ([]model.HotSearch, error) {
 	client := influxdb2.NewClient(global.CFG.URL, global.CFG.Token)
 	defer client.Close()
 	query := `import "influxdata/influxdb/schema"
@@ -117,13 +117,9 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 	hotSearch := model.HotSearch{}
 	if err == nil {
 		tableIndex := 0
-		index := 0
 		for result.Next() {
-			index++
 			// 获取包含热搜数据的map
 			values := result.Record().Values()
-			fmt.Println("values:", values)
-
 			table := values["table"] // table,table相同时为同一条热搜
 			tableStr := fmt.Sprintf("%v", table)
 			tableInt, err := strconv.Atoi(tableStr)
@@ -136,66 +132,47 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 				searches = make([]model.SingleHotSearch, 0)
 				tableIndex = tableInt
 			}
-			rank := values["rank"]
-			content := values["content"]
-			hot := values["hot"]
-			link := values["link"]
-			topicLead := values["topic_lead"]
-			tagStr := ""
 
-			if rank == "00" {
-				hotSearches = append(hotSearches, model.HotSearch{})
-				imageFile := values["image_file"]
-				pdfFile := values["pdf_file"]
-				timeInterface := values["_time"]
-				timeStr := fmt.Sprintf("%v", timeInterface)
-				timeStr = timeStr[:19]
-				img := fmt.Sprintf("%v", imageFile)
-				pdf := fmt.Sprintf("%v", pdfFile)
-				hotSearch.Time = timeStr
-				hotSearch.ImageFile = img
-				hotSearch.PdfFile = pdf
-			} else {
-				rankStr := fmt.Sprintf("%v", rank)
-				contentStr := fmt.Sprintf("%v", content)
-				hotStr := fmt.Sprintf("%v", hot)
-				hotArr := strings.Split(hotStr, " ")
-				if len(hotArr) > 1 {
-					hotStr = hotArr[1]
-					tagStr = hotArr[0]
-				}
-				linkStr := fmt.Sprintf("%v", link)
-				topicLeadStr := fmt.Sprintf("%v", topicLead)
-				if topicLead == nil {
-					topicLeadStr = ""
-				}
-
-				rankInt, err := strconv.Atoi(rankStr)
-				if err != nil {
-					log.Println("rank conv error")
-					return hotSearches, err
-				}
-
-				hotInt, err := strconv.Atoi(hotStr)
-
-				if err != nil {
-					log.Println("hot conv error")
-					return hotSearches, err
-				}
-
-				singleHotSearch := model.SingleHotSearch{}
-				singleHotSearch.Rank = rankInt
-				singleHotSearch.Content = contentStr
-				singleHotSearch.Hot = hotInt
-				singleHotSearch.Tag = tagStr
-				singleHotSearch.Link = linkStr
-				singleHotSearch.TopicLead = topicLeadStr
-				searches = append(searches, singleHotSearch)
+			rankStr := fmt.Sprintf("%v", values["rank"])
+			rankInt, err := strconv.Atoi(rankStr)
+			if err != nil {
+				log.Println("rank conv error")
 			}
+			if rankInt == 1 {
+				timeStr := fmt.Sprintf("%v", values["_time"])
+				timeStr = timeStr[:19]
+				hotSearch.Time = timeStr
+			}
+			contentStr := fmt.Sprintf("%v", values["content"])
+			LinkStr := fmt.Sprintf("%v", values["link"])
+			hotStr := fmt.Sprintf("%v", values["hot"])
+			hotInt, err := strconv.Atoi(hotStr)
+			if err != nil {
+				log.Println("hot conv error")
+			}
+
+			// 为空 置零
+			tagStr := fmt.Sprintf("%v", values["tag"])
+			if values["tag"] == nil {
+				tagStr = ""
+			}
+			iconStr := fmt.Sprintf("%v", values["icon"])
+			if values["icon"] == nil {
+				iconStr = ""
+			}
+
+			singleHotSearch := model.SingleHotSearch{
+				Rank:    rankInt,
+				Content: contentStr,
+				Link:    LinkStr,
+				Hot:     hotInt,
+				Tag:     tagStr,
+				Icon:    iconStr,
+			}
+			searches = append(searches, singleHotSearch)
 			hotSearch.Searches = searches
-			//hotSearches[tableIndex] = hotSearch
+			hotSearches[tableIndex] = hotSearch
 		}
-		fmt.Println(index)
 		if result.Err() != nil {
 			fmt.Printf("query parsing error: %s\n", result.Err().Error())
 		}
@@ -203,7 +180,7 @@ func GetCurrentHotSearch() (model.HotSearch, error) {
 		panic(err)
 	}
 	return hotSearches, nil
-}*/
+}
 
 func GetHotSearchesByContent(content, start, stop string) ([]model.HotSearch, error) {
 	client := influxdb2.NewClient(global.CFG.URL, global.CFG.Token)
