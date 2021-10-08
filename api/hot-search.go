@@ -1,11 +1,13 @@
 package api
 
 import (
+	"log"
+	_ "net/http/pprof"
+	"time"
+
 	"github.com/akazwz/weibo-hot-search/model/response"
 	"github.com/akazwz/weibo-hot-search/utils/influx"
 	"github.com/gin-gonic/gin"
-	"log"
-	"time"
 )
 
 // GetCurrentHotSearchApi 获取当前热搜
@@ -88,6 +90,7 @@ func GetHotSearchesByContentApi(c *gin.Context) {
 			response.CommonFailed(4000, "time parse error", c)
 			return
 		}
+
 		start = startTime.Format(time.RFC3339)
 		stop = endTime.Format(time.RFC3339)
 	}

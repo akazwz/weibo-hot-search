@@ -191,7 +191,7 @@ func GetHotSearchesByContent(content, start, stop string) ([]model.HotSearch, er
 	defer client.Close()
 	if start == "" || stop == "" {
 		stop = time.Now().Format(time.RFC3339)
-		start = time.Now().Add(-24 * time.Hour).Format(time.RFC3339)
+		start = time.Now().Add(-6 * time.Hour).Format(time.RFC3339)
 	}
 	query := `import "influxdata/influxdb/schema"
     from(bucket: "weibo")
@@ -235,6 +235,7 @@ func GetHotSearchesByContent(content, start, stop string) ([]model.HotSearch, er
 			if values["icon"] == nil {
 				iconStr = ""
 			}
+
 			singleHotSearch := model.SingleHotSearch{
 				Rank:    rankInt,
 				Content: contentStr,
