@@ -138,6 +138,7 @@ func GetDurationHotSearch(start, stop string) ([]model.HotSearch, error) {
 			if err != nil {
 				log.Println("rank conv error")
 			}
+			// 热搜第一条记录时间
 			if rankInt == 1 {
 				timeStr := fmt.Sprintf("%v", values["_time"])
 				timeStr = timeStr[:19]
@@ -171,7 +172,10 @@ func GetDurationHotSearch(start, stop string) ([]model.HotSearch, error) {
 			}
 			searches = append(searches, singleHotSearch)
 			hotSearch.Searches = searches
-			hotSearches[tableIndex] = hotSearch
+			// 热搜最后一条整个热搜放入切片
+			if rankInt == 50 {
+				hotSearches = append(hotSearches, hotSearch)
+			}
 		}
 		if result.Err() != nil {
 			fmt.Printf("query parsing error: %s\n", result.Err().Error())
