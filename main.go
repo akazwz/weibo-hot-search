@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/akazwz/weibo-hot-search/global"
 	"github.com/akazwz/weibo-hot-search/initialize"
-	"net/http"
-	_ "net/http/pprof"
 )
 
 func main() {

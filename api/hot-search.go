@@ -2,7 +2,6 @@ package api
 
 import (
 	"log"
-	_ "net/http/pprof"
 	"time"
 
 	"github.com/akazwz/weibo-hot-search/model/response"

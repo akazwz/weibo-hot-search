@@ -16,7 +16,6 @@ require (
 )
 
 require (
-	github.com/gin-contrib/pprof v1.3.0
 	github.com/go-playground/validator/v10 v10.9.0 // indirect
 	github.com/juju/ratelimit v1.0.1
 	github.com/mattn/go-isatty v0.0.13 // indirect
