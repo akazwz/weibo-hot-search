@@ -1,10 +1,12 @@
 package initialize
 
 import (
+	"github.com/akazwz/weibo-hot-search/middle"
 	"github.com/akazwz/weibo-hot-search/model/response"
 	"github.com/akazwz/weibo-hot-search/routers"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"time"
 )
 
 func Routers() *gin.Engine {
@@ -17,9 +19,8 @@ func Routers() *gin.Engine {
 		AllowMethods:     []string{"*"},
 		AllowHeaders:     []string{"*"},
 	}))
-
+	router.Use(middle.RateLimitMiddleware(time.Millisecond*10, 100))
 	router.GET("teapot", response.Teapot)
-
 	routerGroup := router.Group("")
 	routers.InitHotSearch(routerGroup)
 	return router
