@@ -5,6 +5,7 @@ import (
 	"github.com/akazwz/weibo-hot-search/model/response"
 	"github.com/akazwz/weibo-hot-search/routers"
 	"github.com/gin-contrib/cors"
+	_ "github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"time"
 )
