@@ -260,3 +260,79 @@ func GetHotSearchesByContent(content, start, stop string) ([]model.HotSearch, er
 	}
 	return hotSearches, nil
 }
+
+func GetHotSearchesByKeyword(keyword, start, stop string) ([]model.HotSearch, error) {
+	client := influxdb2.NewClient(global.CFG.URL, global.CFG.Token)
+	defer client.Close()
+	if start == "" || stop == "" {
+		stop = time.Now().Format(time.RFC3339)
+		start = time.Now().Add(-24 * time.Hour).Format(time.RFC3339)
+	}
+	query := `import "influxdata/influxdb/schema"
+    from(bucket: "weibo")
+    |> range(start: ` + start + `, stop: ` + stop + `)
+    |> schema.fieldsAsCols()
+	|> filter(fn: (r) => r.content =~ /` + keyword + `/)
+    |> group(columns: ["content"], mode:"by")
+    |> sort(columns: ["_time"])
+    |> timeShift(duration: 8h, columns: ["_start", "_stop", "_time"])`
+	queryAPI := client.QueryAPI(global.CFG.Org)
+	result, err := queryAPI.Query(context.Background(), query)
+	var hotSearches []model.HotSearch
+	if err == nil {
+		for result.Next() {
+			// table changed
+			if result.TableChanged() {
+			}
+			values := result.Record().Values()
+			log.Println(values)
+
+			timeStr := fmt.Sprintf("%v", values["_time"])
+			timeStr = timeStr[:19]
+			rankStr := fmt.Sprintf("%v", values["rank"])
+			rankInt, err := strconv.Atoi(rankStr)
+			if err != nil {
+				log.Println("rank conv error")
+			}
+			contentStr := fmt.Sprintf("%v", values["content"])
+			LinkStr := fmt.Sprintf("%v", values["link"])
+			hotStr := fmt.Sprintf("%v", values["hot"])
+			hotInt, err := strconv.Atoi(hotStr)
+			if err != nil {
+				log.Println("hot conv error")
+			}
+
+			// 为空 置零
+			tagStr := fmt.Sprintf("%v", values["tag"])
+			if values["tag"] == nil {
+				tagStr = ""
+			}
+			iconStr := fmt.Sprintf("%v", values["icon"])
+			if values["icon"] == nil {
+				iconStr = ""
+			}
+
+			singleHotSearch := model.SingleHotSearch{
+				Rank:    rankInt,
+				Content: contentStr,
+				Link:    LinkStr,
+				Hot:     hotInt,
+				Tag:     tagStr,
+				Icon:    iconStr,
+			}
+
+			hotSearches = append(hotSearches, model.HotSearch{
+				Time:     timeStr,
+				Searches: []model.SingleHotSearch{singleHotSearch},
+			})
+		}
+		if result.Err() != nil {
+			fmt.Printf("query parsing error: %s\n", result.Err().Error())
+			return hotSearches, result.Err()
+		}
+	} else {
+		panic(err)
+		return hotSearches, err
+	}
+	return hotSearches, nil
+}
