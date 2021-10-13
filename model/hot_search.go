@@ -1,5 +1,10 @@
 package model
 
+type KeywordHotSearch struct {
+	Keyword     string      `json:"keyword"`
+	HotSearches []HotSearch `json:"hot_searches"`
+}
+
 type HotSearch struct {
 	Time     string            `json:"time"`
 	Searches []SingleHotSearch `json:"searches"`

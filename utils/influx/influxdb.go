@@ -261,12 +261,12 @@ func GetHotSearchesByContent(content, start, stop string) ([]model.HotSearch, er
 	return hotSearches, nil
 }
 
-func GetHotSearchesByKeyword(keyword, start, stop string) ([]model.HotSearch, error) {
+func GetHotSearchesByKeyword(keyword, start, stop string) ([]model.KeywordHotSearch, error) {
 	client := influxdb2.NewClient(global.CFG.URL, global.CFG.Token)
 	defer client.Close()
 	if start == "" || stop == "" {
 		stop = time.Now().Format(time.RFC3339)
-		start = time.Now().Add(-24 * time.Hour).Format(time.RFC3339)
+		start = time.Now().Add(-3 * time.Hour).Format(time.RFC3339)
 	}
 	query := `import "influxdata/influxdb/schema"
     from(bucket: "weibo")
@@ -278,14 +278,22 @@ func GetHotSearchesByKeyword(keyword, start, stop string) ([]model.HotSearch, er
     |> timeShift(duration: 8h, columns: ["_start", "_stop", "_time"])`
 	queryAPI := client.QueryAPI(global.CFG.Org)
 	result, err := queryAPI.Query(context.Background(), query)
-	var hotSearches []model.HotSearch
+	var keywordHotSearches []model.KeywordHotSearch
+	var HotSearches []model.HotSearch
 	if err == nil {
+		tableIndex := 0
 		for result.Next() {
 			// table changed
 			if result.TableChanged() {
 			}
 			values := result.Record().Values()
 			log.Println(values)
+			table := values["table"] // table,table相同时为同一条热搜
+			tableStr := fmt.Sprintf("%v", table)
+			tableInt, err := strconv.Atoi(tableStr)
+			if err != nil {
+				log.Println("table conv error")
+			}
 
 			timeStr := fmt.Sprintf("%v", values["_time"])
 			timeStr = timeStr[:19]
@@ -321,18 +329,29 @@ func GetHotSearchesByKeyword(keyword, start, stop string) ([]model.HotSearch, er
 				Icon:    iconStr,
 			}
 
-			hotSearches = append(hotSearches, model.HotSearch{
+			HotSearches = append(HotSearches, model.HotSearch{
 				Time:     timeStr,
 				Searches: []model.SingleHotSearch{singleHotSearch},
 			})
+
+			if tableInt != tableIndex {
+				keywordHotSearches = append(keywordHotSearches, model.KeywordHotSearch{
+					Keyword:     singleHotSearch.Content,
+					HotSearches: HotSearches,
+				})
+
+				// 有一次以上热搜时,重置searches
+				HotSearches = make([]model.HotSearch, 0)
+				tableIndex = tableInt
+			}
 		}
 		if result.Err() != nil {
 			fmt.Printf("query parsing error: %s\n", result.Err().Error())
-			return hotSearches, result.Err()
+			return keywordHotSearches, result.Err()
 		}
 	} else {
 		panic(err)
-		return hotSearches, err
+		return keywordHotSearches, err
 	}
-	return hotSearches, nil
+	return keywordHotSearches, nil
 }
